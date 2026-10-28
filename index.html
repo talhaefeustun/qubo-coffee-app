@@ -229,6 +229,47 @@ a{color:inherit}
 .phone-row{display:flex;flex-wrap:wrap;gap:6px}
 .phone-row span{font-variant-numeric:tabular-nums;background:var(--surface-2);border:1px solid var(--line);padding:4px 10px;border-radius:999px;font-size:12px}
 
+/* Story */
+.shero{position:relative;height:220px;overflow:hidden;background:var(--green-ink)}
+.shero img{width:100%;height:100%;object-fit:cover;opacity:.75}
+.shero .cap{position:absolute;left:0;right:0;bottom:0;padding:18px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(to top,rgba(14,43,34,.95),transparent);color:#fff}
+.shero .cap h1{font-size:24px;font-weight:600}
+.shero .cap p{margin:4px 0 0;font-size:13px;opacity:.9}
+.shero .back{position:absolute;top:12px;left:max(12px,env(safe-area-inset-left,0px));width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;color:#1b1b1b}
+.facts{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.fact{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.fact b{display:block;font-size:22px;font-weight:700;color:var(--green);line-height:1.1;font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .fact b{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .fact b{color:#8fd1b3}}
+.fact small{display:block;font-size:12px;color:var(--muted);margin-top:3px}
+.prose{font-size:13px;color:var(--fg);line-height:1.6}
+.prose p{margin:0 0 10px}
+.prose p:last-child{margin-bottom:0}
+.tl{display:flex;flex-direction:column;position:relative;padding-left:22px}
+.tl::before{content:"";position:absolute;left:6px;top:8px;bottom:8px;border-left:2px solid var(--line-strong)}
+.tl .ev{position:relative;padding:6px 0 14px}
+.tl .ev::before{content:"";position:absolute;left:-20px;top:11px;width:10px;height:10px;border-radius:50%;background:var(--gold);border:2px solid var(--surface-3)}
+.tl .ev b{display:block;font-size:13px;font-weight:600}
+.tl .ev small{display:block;color:var(--muted);font-size:12px}
+.tl .ev .yr{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.vals{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.val{background:var(--green-light);border-radius:var(--r-md);padding:12px 14px}
+.val b{display:block;font-size:13px;font-weight:600;color:var(--green)}
+:root[data-theme="dark"] .val b{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .val b{color:#8fd1b3}}
+.val small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.models{display:flex;flex-direction:column;gap:8px}
+.model{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12px}
+.model b{display:block;font-size:13px;font-weight:600}
+.model small{color:var(--muted)}
+.model .m2{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--gold-deep)}
+.know{display:flex;gap:12px;align-items:center;background:var(--green-ink);color:#fff;border-radius:var(--r-md);overflow:hidden;text-align:left;width:100%}
+.know img{width:110px;height:110px;object-fit:cover;flex:none}
+.know .tx{padding:12px 14px 12px 0;min-width:0}
+.know .tx b{display:block;font-size:14px;font-weight:600}
+.know .tx small{display:block;font-size:12px;opacity:.85;margin-top:3px}
+.know .tx span{display:inline-block;margin-top:8px;font-size:12px;font-weight:600;color:#d9b985}
+
 /* Tab bar */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .tabs .in{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--tab-h);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
@@ -292,6 +333,14 @@ a{color:inherit}
     <div class="section gutter">
       <div class="sec-head"><h2>Popüler</h2><a class="link" href="#menu" onclick="go('menu');return false">Tümünü gör</a></div>
       <div class="hscroll" id="popularRow"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Qubo'yu tanıyın</h2><a class="link" href="#story" onclick="go('story');return false">Hikayemiz</a></div>
+      <button class="know" onclick="go('story')">
+        <img src="assets/resim2.webp" alt="">
+        <span class="tx"><b>Kendi kavurduğumuz çekirdek</b><small>Brezilya ve Kolombiya'dan doğrudan alınan yeşil çekirdekler, Ankara'daki kavurma atölyemizde her şube için aynı profille kavrulur.</small><span>Good Taste, Good Mood →</span></span>
+      </button>
     </div>
 
     <div class="section gutter">
@@ -404,11 +453,80 @@ a{color:inherit}
     <div class="section gutter">
       <div class="sec-head"><h2>Qubo Coffee</h2></div>
       <div class="list">
+        <button onclick="go('story')"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14M4 19a2 2 0 0 0 2 2h14M8 7h8M8 11h6"/></svg></span><span class="tx"><b>Hikayemiz</b><small>Kavurma atölyesi, akademiler, büyüme yolculuğu</small></span><span class="r">→</span></button>
         <a href="https://www.qubocoffee.com/franchise" target="_blank" rel="noopener"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></span><span class="tx"><b>Franchise başvurusu</b><small>Kendi Qubo Coffee şubenizi açın</small></span><span class="r">→</span></a>
         <a href="https://www.qubocoffee.com/menu" target="_blank" rel="noopener"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M20 8h2a2 2 0 0 1 0 4h-2"/></svg></span><span class="tx"><b>Web menü</b><small>qubocoffee.com/menu</small></span><span class="r">→</span></a>
         <div><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="tx"><b>Müşteri hattı</b><div class="phone-row" style="margin-top:4px"><span>0551 343 78 26</span><span>0312 212 78 26</span></div></span></div>
       </div>
       <p class="sample">Qubo Coffee · Macun Mah. Batı Bulvarı, TİMKO İş Merkezi 19/5, Ankara</p>
+    </div>
+  </section>
+  <!-- STORY -->
+  <section class="screen" id="s-story">
+    <div class="shero">
+      <img src="assets/hakkimizda-yeni-2.webp" alt="Qubo Coffee şubesi">
+      <button class="back" onclick="go('home')" aria-label="Geri"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 5-7 7 7 7"/></svg></button>
+      <div class="cap"><span class="eyebrow" style="color:#d9b985">Hikayemiz</span><h1>Good Taste, Good Mood</h1><p>2021'den beri Ankara'dan büyüyen, kendi çekirdeğini kavuran bir kahve markası.</p></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="facts">
+        <div class="fact"><b>2021</b><small>Ankara Yenimahalle'de kuruluş</small></div>
+        <div class="fact"><b>10 şube</b><small>Ankara, İzmir, Samsun, Sivas ve Erbil</small></div>
+        <div class="fact"><b>2 akademi</b><small>Kahve Kavurma ve Barista Akademisi</small></div>
+        <div class="fact"><b>57 il</b><small>Mey Group ailesinin 115 bayilik ağı</small></div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Çekirdekten fincana</h2></div>
+      <div class="card">
+        <img src="assets/resim2.webp" alt="Qubo Coffee kavurma ünitesi" style="border-radius:12px;height:150px;width:100%;object-fit:cover;margin-bottom:12px">
+        <div class="prose">
+          <p>Qubo Coffee, kahveyi hazır satın almaz. Yeşil çekirdekler Brezilya ve Kolombiya'daki üreticilerden doğrudan alınır; Ankara'daki kavurma atölyesinde her şube için aynı profille kavrulur. Kahve kuşağındaki diğer ülkelerden de alternatif tedarik kurularak hem çeşitlilik hem de arz güvenliği sağlanır.</p>
+          <p>Menüdeki Single Origin Ethiopia, Colombia, Brasil, Guatemala ve Honduras çekirdekleri ile Special Blend, bu atölyenin ürünüdür. Barista Akademisi'nde yetişen ekipler sayesinde Kızılay'da içtiğiniz Flat White ile Erbil'de içtiğiniz aynı tadı verir.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Büyüme yolculuğu</h2></div>
+      <div class="tl">
+        <div class="ev"><span class="yr">2021</span><b>Ankara'da kuruluş</b><small>Yenimahalle, Batı Bulvarı'ndaki merkez ve ilk mağaza. Slogan: Good Taste, Good Mood.</small></div>
+        <div class="ev"><span class="yr">2025</span><b>Franchise sistemi ve Qubo Burger</b><small>3. nesil kahve zinciri konseptiyle franchise verilmeye başlandı; isim hakkı ve franchise bedeli alınmadı. Bir yılda 9 şube.</small></div>
+        <div class="ev"><span class="yr">2026</span><b>İzmir Konak-Karataş, Ankara Hüseyingazi, Samsun Bafra</b><small>Ankara dışına ilk adımlar. Bafra açılışı Perakende.News'te haftanın mağaza açılışları arasında yer aldı.</small></div>
+        <div class="ev"><span class="yr">2026</span><b>Kızılay Konur Sokak</b><small>Başkentin en yoğun yaya trafiğinde, 01:00'e kadar açık şube.</small></div>
+        <div class="ev"><span class="yr">2026</span><b>Erbil Majidi Mall, ilk yurt dışı şube</b><small>Irak'ta master franchise; hedef Orta Doğu'da yeni projeler.</small></div>
+        <div class="ev"><span class="yr">Sırada</span><b>Akaryakıt istasyonu ve özel alan konseptleri</b><small>Standart mağaza dışında lokasyona özel Qubo çözümleri.</small></div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Bizi biz yapan</h2></div>
+      <div class="vals">
+        <div class="val"><b>Kalite</b><small>Titizlikle seçilen çekirdek, her fincanda aynı tat</small></div>
+        <div class="val"><b>Güven</b><small>Misafir ve iş ortaklarıyla şeffaf, uzun vadeli ilişki</small></div>
+        <div class="val"><b>Sürdürülebilirlik</b><small>Doğaya ve topluma karşı sorumlu iş modeli</small></div>
+        <div class="val"><b>Tutku</b><small>Kahveye duyulan tutku her ürüne ilham verir</small></div>
+        <div class="val" style="grid-column:1/-1"><b>Büyüme</b><small>Türkiye ve yurt dışında güçlü marka yapısıyla kontrollü, planlı büyüme</small></div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Franchise modelleri</h2><a class="link" href="https://www.qubocoffee.com/franchise" target="_blank" rel="noopener">Başvur</a></div>
+      <div class="models">
+        <div class="model"><div><b>Qubo GO</b><small>Express · AVM ve kiosk noktaları</small></div><span class="m2">20–70 m²</span></div>
+        <div class="model"><div><b>Qubo CORE</b><small>Dengeli yatırım, tam menü</small></div><span class="m2">70–300 m²</span></div>
+        <div class="model"><div><b>Qubo SIGNATURE</b><small>Premium deneyim, imza mobilyalar</small></div><span class="m2">150–1000 m²</span></div>
+        <div class="model"><div><b>Qubo JOINT</b><small>Kahve + Qubo Burger bir arada</small></div><span class="m2">150–1000 m²</span></div>
+      </div>
+      <p class="sample">Anahtar teslim kurulum, %40 peşin ve 10 taksit seçeneği, Ankara merkezli mimari ve operasyon ekibi.</p>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Mey Group ailesi</h2></div>
+      <div class="card prose"><p>Qubo Coffee; Asır Hekim, Asır Kuruyemiş ve Hatır Kahve markalarını da bünyesinde bulunduran Mey Group'un 12 yıllık saha tecrübesi üzerine kuruldu. Grup, 57 ilde 115 bayiyle çalışıyor.</p></div>
+      <p class="sample">Kaynaklar: qubocoffee.com, Franchise Market Türkiye röportajı (Ocak 2026), Qubo Coffee LinkedIn ve Instagram hesapları.</p>
     </div>
   </section>
 </div>
@@ -722,12 +840,12 @@ function reorder(code) {
 }
 
 /* ---------- ROUTER ---------- */
-const SCREENS = ['home', 'menu', 'cart', 'stores', 'club', 'order', 'promos'];
-const RENDER = { home: renderHome, menu: renderMenu, cart: renderCart, stores: renderStores, club: renderClub, order: renderOrder, promos: renderPromos };
+const SCREENS = ['home', 'menu', 'cart', 'stores', 'club', 'order', 'promos', 'story'];
+const RENDER = { home: renderHome, menu: renderMenu, cart: renderCart, stores: renderStores, club: renderClub, order: renderOrder, promos: renderPromos, story: () => {} };
 function go(name) {
   if (!SCREENS.includes(name)) name = 'home';
   document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 's-' + name));
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name || (name === 'order' && t.dataset.tab === 'cart') || (name === 'promos' && t.dataset.tab === 'home')));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name || (name === 'order' && t.dataset.tab === 'cart') || ((name === 'promos' || name === 'story') && t.dataset.tab === 'home')));
   RENDER[name]();
   if (location.hash !== '#' + name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} }
   window.scrollTo({ top: 0 });
