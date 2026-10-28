@@ -650,7 +650,13 @@ function renderHome() {
   const first = m.name ? m.name.split(' ')[0] : '';
   const h = new Date().getHours();
   const sel = h < 11 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
-  document.getElementById('greet').innerHTML = `${sel}${first ? ', ' + esc(first) : ''}<small>${h < 11 ? 'Güne bir Qubo ile başla.' : h < 18 ? 'Öğleden sonra molası?' : 'Akşam için bir tatlı eşlik etsin.'}</small>`;
+  const closeAt = s ? s.hours.split(' - ')[1] : '01:00';
+  const where = s ? `${s.dist} şubesi` : 'Şubelerimiz';
+  const sub = h < 11 ? 'Kavurma atölyemizden taze Special Blend filtre, yanında Dört Peynirli Haşhaşlı Bagel.'
+    : h < 15 ? 'Öğle molası: Türk kahvesi mi, Ice Americano mu? İkisi de kendi kavurduğumuz çekirdekten.'
+    : h < 18 ? 'Tatlı saati: 15:00 sonrası dilim pasta + filtre kahve menüsü 199₺.'
+    : `${where} ${closeAt}'e kadar açık. Günü Lotus Dome ya da Ballı Cevizli Marlenka ile kapat.`;
+  document.getElementById('greet').innerHTML = `${sel}${first ? ', ' + esc(first) : ''}<small>${sub}</small>`;
   document.getElementById('loyaltyCard').innerHTML = `
     <div class="top"><div><span class="eyebrow">Qubo Club</span><div class="pts">${m.points.toLocaleString('tr-TR')}<small>puan</small></div></div><span class="tier">${tn} üye</span></div>
     <div class="stamps">${stampsHtml(m.stamps)}</div>
