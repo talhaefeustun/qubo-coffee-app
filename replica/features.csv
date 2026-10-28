@@ -1,0 +1,16 @@
+feature,area,priority,original,clone,notes
+Şube seçimi ve hatırlama,stores,must,Kahve zinciri uygulamaları,yes,localStorage ile
+Kategori + arama ile menü,menu,must,qubocoffee.com/menu,yes,8 kategori 186 ürün
+Ürün özelleştirme (boy/süt/şurup/shot),order,must,Starbucks tarzı,yes,içeceklerde aktif
+Sepet ve adet düzenleme,order,must,genel,yes,
+Gel-al saati seçimi,order,should,genel,yes,15 dk aralıklar
+Sipariş durumu takibi,order,should,genel,yes,simüle edilmiş ilerleme
+Qubo Club puan ve damga,loyalty,must,Starbucks Rewards,yes,10 damga = 1 kahve
+QR üye kartı,loyalty,must,genel,yes,SVG QR yer tutucu
+Sipariş geçmişi ve tekrar sipariş,account,should,genel,yes,
+Kampanyalar,marketing,should,genel,yes,örnek içerik
+Şube arama / yol tarifi,stores,should,genel,yes,tel: ve maps linki
+Ödeme entegrasyonu,order,could,genel,no,kapsam dışı
+Harita gömme,stores,could,genel,no,kapsam dışı
+Push bildirim,marketing,could,genel,no,kapsam dışı
+Karanlık tema,ui,should,genel,yes,sistem temasına uyar

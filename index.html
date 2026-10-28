@@ -1,0 +1,745 @@
+<title>Qubo Coffee App</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#174d3a">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single phone-width column (max 430px) centred on a cream backdrop; screens swap inside it, a fixed tab bar sits at the bottom. */
+:root{
+  --green:#174d3a; --green-deep:#12382f; --green-ink:#0e2b22; --green-light:#edf6f1;
+  --gold:#c1955a; --gold-soft:rgba(193,149,90,.14); --gold-deep:#a77a42;
+  --bg:#efe9df; --surface:#ffffff; --surface-2:#f7f4ef; --surface-3:#fbfaf6;
+  --fg:#141414; --muted:#5c5c5c; --muted-2:#8a8a8a; --line:#e3e8e4; --line-strong:#cfd8d3;
+  --on-accent:#ffffff; --success:#1f7a4d; --danger:#b8432f; --warn:#c1955a;
+  --shadow:0 6px 24px rgba(17,17,17,.07); --shadow-sheet:0 -12px 40px rgba(17,17,17,.22);
+  --font:"Poppins",Inter,Arial,sans-serif;
+  --r-sm:10px; --r-md:16px; --r-lg:24px;
+  --tab-h:64px;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0b1511; --surface:#15221d; --surface-2:#1b2b25; --surface-3:#12201a;
+  --fg:#f1ede6; --muted:#b7b2a8; --muted-2:#857f75; --line:#24352e; --line-strong:#335043;
+  --green-light:#173b2e; --gold-soft:rgba(193,149,90,.18);
+  --shadow:0 6px 24px rgba(0,0,0,.35); --shadow-sheet:0 -12px 40px rgba(0,0,0,.6);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0b1511; --surface:#15221d; --surface-2:#1b2b25; --surface-3:#12201a;
+  --fg:#f1ede6; --muted:#b7b2a8; --muted-2:#857f75; --line:#24352e; --line-strong:#335043;
+  --green-light:#173b2e; --gold-soft:rgba(193,149,90,.18);
+  --shadow:0 6px 24px rgba(0,0,0,.35); --shadow-sheet:0 -12px 40px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--green)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+img{max-width:100%;display:block}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.2}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Phone column */
+.app{position:relative;max-width:430px;margin:0 auto;min-height:100%;background:var(--surface-3);display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(0,0,0,.12)}
+@media (max-width:480px){.app{box-shadow:none}}
+.screen{display:none;flex:1;flex-direction:column;padding-bottom:calc(var(--tab-h) + 24px + env(safe-area-inset-bottom,0px))}
+.screen.active{display:flex}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Header band */
+.band{background:var(--green);color:#fff;padding-block:14px 52px;position:relative;overflow:hidden}
+.band::after{content:"";position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(193,149,90,.35),transparent 65%);pointer-events:none}
+.band .row{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}
+.logo{height:40px;width:auto}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:12px;font-weight:500;max-width:100%}
+.chip svg{flex:none}
+.chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:var(--gold)}
+.band .eyebrow{color:#d9b985}
+.greet{font-size:22px;font-weight:600;margin-top:10px;position:relative;z-index:1}
+.greet small{display:block;font-size:13px;font-weight:400;opacity:.85;margin-top:2px}
+
+/* Loyalty card */
+.loyalty{margin:-34px 0 0;position:relative;z-index:2;border-radius:var(--r-lg);padding:18px;color:#fff;
+  background:linear-gradient(135deg,#1c5a44 0%,#12382f 60%,#0e2b22 100%);box-shadow:var(--shadow);overflow:hidden}
+.loyalty::before{content:"";position:absolute;inset:auto -30px -60px auto;width:180px;height:180px;border-radius:50%;border:26px solid rgba(193,149,90,.25)}
+.loyalty .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:relative}
+.loyalty .pts{font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.loyalty .pts small{font-size:13px;font-weight:500;opacity:.8;margin-left:4px}
+.tier{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--gold);color:#1b1b1b;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.stamps{display:flex;gap:6px;margin-top:14px;position:relative}
+.stamp{flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);display:grid;place-items:center;max-width:30px}
+.stamp.on{background:var(--gold);border-color:var(--gold);color:#1b1b1b}
+.stamp svg{width:14px;height:14px}
+.loyalty .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:12px;opacity:.9;position:relative}
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12px;font-weight:500}
+
+/* Sections */
+.section{padding-block:22px 0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:12px}
+.sec-head h2{font-size:17px;font-weight:600}
+.link{font-size:12px;font-weight:500;color:var(--green);text-decoration:none}
+:root[data-theme="dark"] .link{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .link{color:#8fd1b3}}
+.hscroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none;margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{scroll-snap-align:start;flex:none}
+
+/* Promo cards */
+.promo{width:260px;border-radius:var(--r-md);padding:16px;color:#fff;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.promo h3{font-size:15px;font-weight:600;max-width:64%}
+.promo p{margin:4px 0 0;font-size:12px;opacity:.9;max-width:64%}
+.promo .tag{align-self:flex-start;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.18)}
+.promo img{position:absolute;right:2px;bottom:-4px;width:88px;height:88px;object-fit:contain;filter:drop-shadow(0 8px 14px rgba(0,0,0,.3))}
+.promo.g{background:linear-gradient(135deg,#1d5f49,#174d3a)}
+.promo.b{background:linear-gradient(135deg,#8a5a3a,#5e3a24)}
+.promo.k{background:linear-gradient(135deg,#2a2a2a,#121212)}
+
+/* Category tiles */
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--fg)}
+.cat img{width:46px;height:46px;object-fit:contain}
+.cat.on{border-color:var(--green);background:var(--green-light)}
+
+/* Product cards */
+.pcard{width:150px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px;display:flex;flex-direction:column;gap:6px;text-align:left;color:var(--fg)}
+.pcard .img{aspect-ratio:1;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden}
+.pcard img{width:88%;height:88%;object-fit:contain}
+.pcard .name{font-size:13px;font-weight:500;line-height:1.3;min-height:2.6em}
+.pcard .bottom{display:flex;justify-content:space-between;align-items:center}
+.price{font-weight:600;font-variant-numeric:tabular-nums}
+.addbtn{width:30px;height:30px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center}
+.addbtn svg{width:16px;height:16px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.grid .pcard{width:auto}
+
+/* Store card */
+.store{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.store .ph{height:120px;background:var(--surface-2)}
+.store .ph img{width:100%;height:100%;object-fit:cover}
+.store .body{padding:12px 14px 14px}
+.store h3{font-size:15px;font-weight:600}
+.store p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.store.sel{border-color:var(--green);box-shadow:0 0 0 2px var(--green-light)}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px}
+.pill.open{background:var(--green-light);color:var(--success)}
+.pill.closed{background:#f6e8e5;color:var(--danger)}
+:root[data-theme="dark"] .pill.closed{background:#3a2520;color:#f0a090}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .pill.closed{background:#3a2520;color:#f0a090}}
+.pill .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:13px;text-decoration:none;border:1px solid transparent;min-height:40px}
+.btn.primary{background:var(--green);color:#fff}
+.btn.gold{background:var(--gold);color:#1b1b1b}
+.btn.outline{border-color:var(--line-strong);color:var(--fg);background:var(--surface)}
+.btn.sm{padding:7px 12px;min-height:34px;font-size:12px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Page headers */
+.ph-head{padding-block:18px 10px}
+.ph-head h1{font-size:24px;font-weight:600}
+.ph-head p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 14px;height:44px;margin-top:12px}
+.search input{flex:1;border:0;background:none;outline:none;min-width:0}
+.search svg{color:var(--muted-2);flex:none}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-block:12px 4px;margin-left:calc(-1*max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1*max(16px,env(safe-area-inset-right,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.chips::-webkit-scrollbar{display:none}
+.chips button{flex:none;padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12px;font-weight:500;color:var(--fg)}
+.chips button.on{background:var(--green);border-color:var(--green);color:#fff}
+.sticky{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface-3);padding-bottom:4px}
+
+/* Cart */
+.line{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:10px}
+.line .th{width:64px;height:64px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;flex:none}
+.line .th img{width:85%;height:85%;object-fit:contain}
+.line .info{flex:1;min-width:0}
+.line .info b{display:block;font-weight:600;font-size:13px}
+.line .info small{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line-strong);border-radius:999px;overflow:hidden}
+.stepper button{width:30px;height:30px;display:grid;place-items:center;color:var(--fg)}
+.stepper output{min-width:24px;text-align:center;font-weight:600;font-size:13px;font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px}
+.card h3{font-size:14px;font-weight:600;margin-bottom:10px}
+.opt-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.opt-row:first-of-type{border-top:0;padding-top:0}
+.opt-row b{font-weight:500}
+.opt-row .v{color:var(--muted);font-size:12px;text-align:right}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:7px 12px;border-radius:999px;border:1px solid var(--line-strong);font-size:12px;font-weight:500;background:var(--surface);color:var(--fg)}
+.seg button.on{background:var(--green);border-color:var(--green);color:#fff}
+.sum{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;font-variant-numeric:tabular-nums}
+.sum.total{font-size:16px;font-weight:600;border-top:1px solid var(--line);margin-top:6px;padding-top:10px}
+.stack{display:flex;flex-direction:column;gap:12px}
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty svg{width:72px;height:72px;margin:0 auto 12px;color:var(--gold)}
+.empty h3{color:var(--fg);font-size:16px;margin-bottom:4px}
+.note{width:100%;border:1px solid var(--line-strong);border-radius:12px;padding:10px 12px;background:var(--surface);outline:none;font-size:13px}
+.cta-bar{position:fixed;left:0;right:0;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px));z-index:6;pointer-events:none}
+.cta-bar .in{max-width:430px;margin:0 auto;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));pointer-events:auto;background:linear-gradient(to top,var(--surface-3) 70%,transparent)}
+
+/* Order status */
+.ocode{font-size:34px;font-weight:700;letter-spacing:.04em;color:var(--green);font-variant-numeric:tabular-nums}
+:root[data-theme="dark"] .ocode{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ocode{color:#8fd1b3}}
+.steps{display:flex;flex-direction:column;gap:0;margin-top:8px}
+.step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;position:relative}
+.step .dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line-strong);display:grid;place-items:center;flex:none;background:var(--surface);transition:background .3s,border-color .3s}
+.step .dot svg{width:14px;height:14px;color:#fff;opacity:0}
+.step.done .dot{background:var(--green);border-color:var(--green)}
+.step.done .dot svg{opacity:1}
+.step.now .dot{border-color:var(--gold);box-shadow:0 0 0 6px var(--gold-soft)}
+.step b{display:block;font-weight:600;font-size:13px}
+.step small{color:var(--muted);font-size:12px}
+.step+.step::before{content:"";position:absolute;left:12px;top:-8px;height:18px;border-left:2px solid var(--line)}
+
+/* Club */
+.qrcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;display:flex;gap:16px;align-items:center}
+.qrcard canvas{width:120px;height:120px;border-radius:10px;background:#fff;flex:none}
+.qrcard .mid{flex:1;min-width:0}
+.qrcard .mid b{display:block;font-size:16px;font-weight:600}
+.qrcard .mid small{display:block;color:var(--muted);font-size:12px}
+.prog{height:8px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:8px}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-deep));border-radius:999px}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);overflow:hidden}
+.list>*{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);text-align:left;color:var(--fg);width:100%;text-decoration:none}
+.list>*:first-child{border-top:0}
+.list .ic{width:34px;height:34px;border-radius:10px;background:var(--green-light);display:grid;place-items:center;color:var(--green);flex:none}
+:root[data-theme="dark"] .list .ic{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .list .ic{color:#8fd1b3}}
+.list .tx{flex:1;min-width:0}
+.list .tx b{display:block;font-size:13px;font-weight:500}
+.list .tx small{display:block;color:var(--muted);font-size:11px}
+.list .r{color:var(--muted-2);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.switch{width:40px;height:24px;border-radius:999px;background:var(--line-strong);position:relative;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.switch[aria-checked="true"]{background:var(--green)}
+.switch[aria-checked="true"]::after{transform:translateX(16px)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)}
+.field input{border:1px solid var(--line-strong);border-radius:12px;padding:10px 12px;background:var(--surface);color:var(--fg);outline:none}
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.gallery img{aspect-ratio:1;object-fit:cover;border-radius:12px;width:100%}
+.phone-row{display:flex;flex-wrap:wrap;gap:6px}
+.phone-row span{font-variant-numeric:tabular-nums;background:var(--surface-2);border:1px solid var(--line);padding:4px 10px;border-radius:999px;font-size:12px}
+
+/* Tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .in{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--tab-h);padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:10px;font-weight:500;color:var(--muted-2);position:relative;text-decoration:none}
+.tab svg{width:22px;height:22px}
+.tab.on{color:var(--green)}
+:root[data-theme="dark"] .tab.on{color:#8fd1b3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tab.on{color:#8fd1b3}}
+.tab .badge{position:absolute;top:8px;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:999px;background:var(--gold);color:#1b1b1b;font-size:10px;font-weight:700;display:grid;place-items:center;padding:0 4px}
+
+/* Sheet */
+.overlay{position:fixed;inset:0;background:rgba(10,20,16,.55);z-index:20;display:none;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{width:100%;max-width:430px;max-height:92%;background:var(--surface);border-radius:24px 24px 0 0;box-shadow:var(--shadow-sheet);overflow:auto;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.sheet .handle{width:40px;height:4px;border-radius:999px;background:var(--line-strong);margin:0 auto 12px}
+.sheet .hero{height:200px;border-radius:18px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden;position:relative}
+.sheet .hero img{height:88%;width:auto;max-width:90%;object-fit:contain}
+.sheet .hero .close{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;background:var(--surface);display:grid;place-items:center;box-shadow:var(--shadow)}
+.sheet h2{font-size:20px;font-weight:600;margin-top:14px}
+.sheet .sub{color:var(--muted);font-size:12px;margin-top:2px}
+.ogroup{margin-top:16px}
+.ogroup .lab{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:8px}
+.ogroup .lab small{color:var(--muted-2);font-weight:400}
+.sheet .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + 14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--green-ink);color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:500;z-index:30;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.sample{font-size:11px;color:var(--muted-2);text-align:center;margin-top:16px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app" id="app">
+
+  <!-- HOME -->
+  <section class="screen" id="s-home">
+    <div class="band gutter">
+      <div class="row">
+        <img class="logo" src="assets/qubocoffee-logo-white.webp" alt="Qubo Coffee">
+        <button class="chip" id="branchChip" aria-label="Şube seç" onclick="go('stores')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+          <span id="branchName">Şube seç</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="greet" id="greet">Hoş geldin<small>Bugün hangi kahveyle başlıyoruz?</small></div>
+    </div>
+    <div class="gutter">
+      <div class="loyalty" id="loyaltyCard"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Kampanyalar</h2><a class="link" href="#promos" onclick="go('promos');return false">Tümü</a></div>
+      <div class="hscroll" id="promoRow"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Kategoriler</h2><a class="link" href="#menu" onclick="go('menu');return false">Menü</a></div>
+      <div class="cats" id="homeCats"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Popüler</h2><a class="link" href="#menu" onclick="go('menu');return false">Tümünü gör</a></div>
+      <div class="hscroll" id="popularRow"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Seçili şube</h2><a class="link" href="#stores" onclick="go('stores');return false">Değiştir</a></div>
+      <div id="homeStore"></div>
+    </div>
+    <p class="sample gutter">Fiyatlar örnektir; şube bazında güncellenir.</p>
+  </section>
+
+  <!-- MENU -->
+  <section class="screen" id="s-menu">
+    <div class="sticky gutter">
+      <div class="ph-head">
+        <span class="eyebrow">Ürünler</span>
+        <h1>Menü</h1>
+        <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Ürün ara: latte, pasta, bagel..." autocomplete="off"></label>
+      </div>
+      <div class="chips" id="catChips"></div>
+    </div>
+    <div class="gutter">
+      <div class="grid" id="menuGrid"></div>
+      <div class="empty" id="menuEmpty" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M8 11h6"/></svg>
+        <h3>Sonuç yok</h3><p>Başka bir ürün adı deneyin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROMOS -->
+  <section class="screen" id="s-promos">
+    <div class="gutter">
+      <div class="ph-head"><span class="eyebrow">Qubo Club</span><h1>Kampanyalar</h1><p>Seçili şubede geçerli fırsatlar.</p></div>
+      <div class="stack" id="promoList"></div>
+    </div>
+  </section>
+
+  <!-- CART -->
+  <section class="screen" id="s-cart">
+    <div class="gutter">
+      <div class="ph-head"><span class="eyebrow">Gel-al sipariş</span><h1>Sepet</h1><p id="cartSub">Şubeden teslim</p></div>
+      <div id="cartBody"></div>
+    </div>
+  </section>
+
+  <!-- ORDER STATUS -->
+  <section class="screen" id="s-order">
+    <div class="gutter"><div id="orderBody"></div></div>
+  </section>
+
+  <!-- STORES -->
+  <section class="screen" id="s-stores">
+    <div class="sticky gutter">
+      <div class="ph-head">
+        <span class="eyebrow">Konumlarımız</span>
+        <h1>Şubeler</h1>
+        <label class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="sq" type="search" placeholder="Şehir veya ilçe ara" autocomplete="off"></label>
+      </div>
+    </div>
+    <div class="gutter stack" id="storeList" style="padding-top:8px"></div>
+    <div class="section gutter">
+      <div class="sec-head"><h2>Mekanlarımız</h2></div>
+      <div class="gallery">
+        <img src="assets/galeri-sube-01.webp" alt="Qubo Coffee şube içi" loading="lazy">
+        <img src="assets/galeri-sube-02.webp" alt="Qubo Coffee şube içi" loading="lazy">
+        <img src="assets/galeri-sube-03.webp" alt="Qubo Coffee şube içi" loading="lazy">
+        <img src="assets/galeri-sube-04.webp" alt="Qubo Coffee şube içi" loading="lazy">
+        <img src="assets/galeri-sube-05.webp" alt="Qubo Coffee şube içi" loading="lazy">
+        <img src="assets/galeri-sube-06.webp" alt="Qubo Coffee şube içi" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- CLUB / ACCOUNT -->
+  <section class="screen" id="s-club">
+    <div class="band gutter">
+      <div class="row"><img class="logo" src="assets/qubocoffee-logo-white.webp" alt="Qubo Coffee"><span class="chip"><span id="tierChip">Bronz üye</span></span></div>
+      <div class="greet"><span id="clubName">Misafir</span><small>Qubo Club üye kartın</small></div>
+    </div>
+    <div class="gutter" style="margin-top:-34px;position:relative;z-index:2">
+      <div class="qrcard">
+        <canvas id="qr" width="240" height="240" aria-label="Üye QR kodu"></canvas>
+        <div class="mid">
+          <b id="clubPts">0 puan</b>
+          <small id="clubNext">Kasada okut, puan kazan</small>
+          <div class="prog"><i id="tierBar" style="width:0%"></i></div>
+          <small id="tierText" style="margin-top:6px"></small>
+        </div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Damga kartı</h2><span class="link" id="stampText">0/10</span></div>
+      <div class="card"><div class="stamps" id="clubStamps" style="margin-top:0"></div><p style="margin:12px 0 0;font-size:12px;color:var(--muted)">Her içecekte 1 damga. 10 damga = 1 ücretsiz kahve.</p></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Sipariş geçmişi</h2></div>
+      <div class="list" id="history"></div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Hesap</h2></div>
+      <div class="card stack">
+        <label class="field">Ad Soyad<input id="nameInput" placeholder="Adınız" autocomplete="off"></label>
+        <div class="opt-row" style="border-top:1px solid var(--line);padding-top:12px"><b>Kampanya bildirimleri</b><button class="switch" role="switch" aria-checked="true" id="swPromo" aria-label="Kampanya bildirimleri"></button></div>
+        <div class="opt-row"><b>Sipariş hazır bildirimi</b><button class="switch" role="switch" aria-checked="true" id="swOrder" aria-label="Sipariş bildirimi"></button></div>
+      </div>
+    </div>
+
+    <div class="section gutter">
+      <div class="sec-head"><h2>Qubo Coffee</h2></div>
+      <div class="list">
+        <a href="https://www.qubocoffee.com/franchise" target="_blank" rel="noopener"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></span><span class="tx"><b>Franchise başvurusu</b><small>Kendi Qubo Coffee şubenizi açın</small></span><span class="r">→</span></a>
+        <a href="https://www.qubocoffee.com/menu" target="_blank" rel="noopener"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v12a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M20 8h2a2 2 0 0 1 0 4h-2"/></svg></span><span class="tx"><b>Web menü</b><small>qubocoffee.com/menu</small></span><span class="r">→</span></a>
+        <div><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.6a2 2 0 0 1-.5 2.1L8 9.7a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.8.3 1.7.5 2.6.7a2 2 0 0 1 1.7 2z"/></svg></span><span class="tx"><b>Müşteri hattı</b><div class="phone-row" style="margin-top:4px"><span>0551 343 78 26</span><span>0312 212 78 26</span></div></span></div>
+      </div>
+      <p class="sample">Qubo Coffee · Macun Mah. Batı Bulvarı, TİMKO İş Merkezi 19/5, Ankara</p>
+    </div>
+  </section>
+</div>
+
+<!-- TAB BAR -->
+<nav class="tabs" aria-label="Ana gezinme"><div class="in">
+  <a class="tab" href="#home" data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11 12 3l9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Anasayfa</a>
+  <a class="tab" href="#menu" data-tab="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2.5 2.5 0 0 1 0 5h-2M8 3v2M11 3v2M14 3v2"/></svg>Menü</a>
+  <a class="tab" href="#cart" data-tab="cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 7h12l1 14H5z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/></svg>Sepet<span class="badge" id="cartBadge" hidden>0</span></a>
+  <a class="tab" href="#stores" data-tab="stores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Şubeler</a>
+  <a class="tab" href="#club" data-tab="club"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Qubo Club</a>
+</div></nav>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- DATA ---------- */
+const CATS = [
+ {id:'sicak', name:'Sıcak İçecekler', dir:'sicaklar_new', drink:true, base:[85,150], icon:'flat_white', items:[
+  ['Espresso','espresso'],['Double Espresso','double_espresso'],['Cortado','cortado'],['Flat White','flat_white'],['Macchiato','macchiato'],['Americano','americano'],['Cappuccino','cappuccino'],['Filtre Kahve','filtre_kahve'],['Filter with Milk','filter_with_milk'],['Red Eye / Black Eye / Dead Eye','red_eye_black_eye_dead_eye'],
+  ['Türk Kahvesi','turk_kahvesi'],['Double Türk Kahvesi','double_turk_kahvesi'],['Damla Sakızlı Türk Kahvesi','damla_sakizli_turk_kahvesi'],['Double Damla Sakızlı Türk Kahvesi','double_damla_sakizli_turk_kahvesi'],['Double Dibek Kahve','double_dibek_kahve'],['Menengiç Kahve','menengic_kahve'],['Double Menengiç Kahvesi','double_menengic_kahvesi'],
+  ['Caramel Latte','caramel_latte'],['Chai Tea Latte','chai_tea_latte'],['Choco Banana Latte','choco_banana_latte'],['Almond Caramel Latte','almond_caramel_latte'],['Caramel Cinnamon Latte','caramel_cinnamon_latte'],['Maple Latte','maple_latte'],['Pumpkin Spice Latte','pumpkin_spice_latte'],['Toffee Nut Latte','toffee_nut_latte'],['Vanilya Cookie Latte','vanilya_cookie_latte'],['White Lavender Latte','white_lavender_latte'],['Berry White Latte','berry_white_latte'],['W. Chocolate Mocha','w_chocolate_mocha'],['Bubble Dream White','bubble_dream_white'],['Golden Almond White Mocha','golden_almond_white_mocha'],
+  ['Sıcak Çikolata','sicak_cikolata'],['Fincan / Kupa Çay','fincan_kupa_cay'],['Çay','cay'],['Ada Çayı','ada_cayi'],['Atom Çayı','atom_cayi'],['Kış Çayı','kis_cayi'],['Yasemin Çayı','yasemin_cayi'],['Papatya Çayı','papatya_cayi'],['Ihlamur','ihlamur'],['Nane Limon','nane_limon']]},
+ {id:'soguk', name:'Soğuk İçecekler', dir:'soguklar', drink:true, base:[120,190], icon:'ice_caramel_latte', items:[
+  ['Ice Latte','ice_latte'],['Ice Americano','ice_americano'],['Ice Cortado','ice_cortado'],['Ice Caramel Latte','ice_caramel_latte'],['Ice Caramel Cinnamon','ice_caramel_cinnamon_latte'],['Ice Almond Karamel Latte','ice_almond_karamel_latte'],['Ice Chai White Latte','ice_chai_white_latte'],['Ice Choco Banana Latte','ice_choco_banana_latte'],['Ice Maple Latte','ice_maple_latte'],['Ice Pumpkin Spice','ice_pumpkin_spice_latte'],['Ice Salted Caramel Latte','ice_salted_caramel_latte'],['Ice Toffee Nut Latte','ice_toffee_nut_latte'],['Ice Vanilya Cookie','ice_vanilya_cookie_latte'],['Ice White Lavender','ice_white_lavender_latte'],['Ice Berry White','ice_berry_white'],['Ice Bubble Dream White','ice_bubble_dream_white'],['Ice Dead Eye','ice_dead_eye'],
+  ['Espresso Frappe','espresso_frappe'],['Caramel Frappe','caramel_frappe'],['Mocha Frappe','mocha_frappe'],['Cream Cheese Frappe','cream_cheese_frappe'],['Vanilya Frappe','vanilya_frappe'],['Limonata','limonata'],['Apple Spice','apple_spice'],['Berry Hibiscus Frozen','berry_hibiscus_frozen'],['Blackberry Frozen','blackberry_frozen'],['Mango Frozen','mango_frozen'],['Peach Frozen','peach_frozen'],['Melon Breeze','melon_breeze'],['Minty Lime Frozen','minty_lime_frozen'],['Bubble Coconut','bubble_coconut'],['Bubble Gun Citrus','bubble_gun_citrus'],['Black Forest Frozen','black_forest_frozen'],['Black Lime Frozen','black_lime_frozen'],['Lavender Berry','lavender_berry'],['Pineapple Frozen','pineapple_frozen'],['Pink Flow','pink_flow'],['Red Velvet Citrus','red_velvet_citrus'],['Strawberry Frozen','strawberry_frozen'],['Strawberry Cream','strawberry_cream'],['Strawberry Mint','strawberry_mint']]},
+ {id:'pasta', name:'Pasta ve Tatlılar', dir:'pastalar', base:[140,220], icon:'lotus_dome', items:[
+  ['Ahududu Mélange','ahududu_melange'],['Ballı Cevizli Marlenka','balli_cevizli_marlenka'],['Bella Vista','bella_vista'],['Beyaz Cookie Pasta','beyaz_cookie_pasta'],['Cocokat','cocokat'],['Cocostar','cocostar'],['Dakuaz Pasta','dakuaz_pasta'],['Dark Çikolatalı Pasta','dark_cikolatali_pasta'],['Fındıklı Latte','findikli_latte'],['Fıstık Rüyası','fistik_ruyasi'],['Havuçlu Kremalı Pasta','havuclu_kremali_pasta'],['Kara Orman Meyveli','kara_orman_meyveli'],['Karamel Polka','karamel_polka'],['Kestaneli Dikdörtgen Pasta','kestaneli_dikdortgen_pasta'],['Limonlu Haşhaşlı','limonlu_hashasli'],['Lotus Dome','lotus_dome'],['Mandalina Dome','mandalina_dome'],['Mocha Pasta','mocha_pasta'],['Mozaik Pasta','mozaik_pasta'],['Orman Meyveli','orman_meyveli'],['Portakal Çikolatalı','portakal_cikolatali'],['Portakallı Kahveli','portakalli_kahveli'],['Siyah Cookie Pasta','siyah_cookie_pasta'],['Snickers','snickers'],['Sütlü Reçelli','sut_recelli2'],['Vişneli Pasta','visneli_pasta'],['Yaban Mersinli','yaban_mersinli'],['Çilekli Cup','cilekli_cup2'],['Fıstıklı Cup','fistikli_cup2'],['Lotus Cup','lotus_cup2'],['Oreo Cup','oreo_cup2'],['Profiterol Cup','profiterol_cup2'],['Spoonful Cup','spoonful_cup2'],['Tiramisu Cup','tiramisu_cup2']]},
+ {id:'sandvic', name:'Sandviçler', dir:'sandvicler', base:[180,240], icon:'dort_peynirli_hashasli_bagel', items:[
+  ['Barbekü Soslu Macar Salam','barbeku_soslu_macar_salam'],['Dana Jambonlu Çeşnili','dana_jambonlu_cesnili'],['Dana Jambonlu','dana_jambonlu'],['Dört Peynirli Haşhaşlı Bagel','dort_peynirli_hashasli_bagel'],['Hindi Fümeli','hindi_fumeli'],['Kajun Tavuklu','kajun_tavuklu'],['Köz Patlıcanlı','koz_patlicanli'],['Teriyaki Soslu Tavuk','teriyaki_soslu_tavuk'],['Vişne Reçelli Peynirli','visne_recelli_peynirli'],['Yulaflı Mozerella','yuflali_mozerella']]},
+ {id:'burger', name:'Burger', dir:'bistro', base:[290,340], icon:'special_burger', items:[['Special Burger','special_burger'],['Single & Double Burger','single_double_burger']]},
+ {id:'cekirdek', name:'Kahve Çekirdekleri', dir:'kahve-cekirdekleri', beans:true, base:[480,680], icon:'special-blend-espresso', items:[
+  ['Special Blend Espresso','special-blend-espresso'],['Single Origin Ethiopia Guji Gr1 Espresso','single-origin-ethiopia-guji-gr1-espresso'],['Single Origin Brasil Guatemala','single-origin-brasil-guatemala'],['Single Origin Brasil Honduras','single-origin-brasil-honduras'],['Single Origin Colombia Espresso','single-origin-colombia-espresso'],['Single Origin Brasil Espresso','single-origin-brasil-espresso'],['Single Origin Ethiopia Espresso','single-origin-ethiopia-espresso'],['Special Blend Filtre','special-blend-filtre'],['Single Origin Ethiopia Guji Gr1 Filtre','single-origin-ethiopia-guji-gr1-filtre'],['Single Origin Guatemala Filtre','single-origin-guatemala-filtre'],['Single Origin Honduras Filtre','single-origin-honduras-filtre'],['Single Origin Colombia Filtre','single-origin-colombia-filtre'],['Single Origin Brasil Filtre','single-origin-brasil-filtre'],['Single Origin Ethiopia Filtre','single-origin-ethiopia-filtre']]},
+ {id:'termos', name:'Termoslar', dir:'termoslar', base:[650,1250], icon:'Swift1', items:[['Swift Termos','Swift1'],['Fusion Termos','Fusion1'],['Flex Termos','Flex1'],['BrewGo Termos','BrewGo1'],['Therma Termos','Therma1'],['BrewKit Seti','BrewKit1'],['Terra Termos','Terra1'],['Nomad Termos','Nomad1']]},
+ {id:'soft', name:'Soft Drinks', dir:'softdrink', base:[45,75], icon:'laimon_fresh_mint_new', items:[['Coca Cola','coca_cola_new'],['Fanta','fanta_new'],['Sprite','sprite_new'],['Beypazarı Maden Suyu','beypazari_maden_suyu_new'],['Beypazarı Meyveli Soda','beypazari_meyveli_soda_new'],['Laimon Fresh Berry','laimon_fresh_berry_new'],['Laimon Fresh Mango','laimon_fresh_mango_new'],['Laimon Fresh Mint','laimon_fresh_mint_new'],['Aloe Vera King','aloe_vera_king_new'],['Su 0.5L','su_0_5l_new']]}
+];
+const hash = s => { let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
+const PRODUCTS = [];
+CATS.forEach(c => c.items.forEach(([name, file]) => {
+  const span = c.base[1] - c.base[0];
+  const price = c.base[0] + Math.round((hash(name) % (span / 5 + 1))) * 5;
+  PRODUCTS.push({ id: c.id + ':' + file, cat: c.id, catName: c.name, name, img: `assets/${c.dir}/${file}.webp`, price, drink: !!c.drink, beans: !!c.beans });
+}));
+const byId = id => PRODUCTS.find(p => p.id === id);
+const POPULAR = ['sicak:flat_white','soguk:ice_caramel_latte','pasta:lotus_dome','sicak:turk_kahvesi','soguk:mango_frozen','sandvic:dort_peynirli_hashasli_bagel','pasta:tiramisu_cup2','sicak:caramel_latte'];
+
+const STORES = [
+ {id:'yenimahalle', city:'Ankara', dist:'Yenimahalle', addr:'Macun Mah. Batı Bulvarı TİMKO İş Merkezi 177. Cad. 19/5', hours:'08:00 - 17:30', img:'sube-yenimahalle-yeni', tel:'0312 212 78 26'},
+ {id:'kizilay', city:'Ankara', dist:'Kızılay', addr:'Kızılay Konur 2 Sok. No:35/B, Çankaya', hours:'08:00 - 01:00', img:'sube-kizilay', tel:'0551 343 78 26'},
+ {id:'altindag', city:'Ankara', dist:'Altındağ', addr:'Feridun Çelik Mah. 1048. Cd. No:167/C', hours:'08:00 - 02:00', img:'sube-altindag-yeni', tel:'0551 343 78 26'},
+ {id:'besevler', city:'Ankara', dist:'Beşevler', addr:'Bahçelievler, Mareşal Fevzi Çakmak Cd. No:16 A, Çankaya', hours:'08:00 - 00:30', img:'sube-besevler', tel:'0551 343 78 26'},
+ {id:'cankaya', city:'Ankara', dist:'Çankaya', addr:'Kızılırmak, Mevlana Bulvarı, Karbeyaz Opet yanı', hours:'08:00 - 01:00', img:'sube-cankaya', tel:'0551 343 78 26'},
+ {id:'golbasi', city:'Ankara', dist:'Gölbaşı', addr:'Gölbaşı, Ankara', hours:'08:00 - 01:00', img:'sube-golbasi', tel:'0551 343 78 26'},
+ {id:'izmir', city:'İzmir', dist:'Konak', addr:'Barbaros, Mithatpaşa Cd. No:246/A, 35260', hours:'08:00 - 23:00', img:'sube-izmir', tel:'0507 171 78 26'},
+ {id:'bafra', city:'Samsun', dist:'Bafra', addr:'İsmetpaşa Mah. İsmetpaşa Cad. No:15/1A', hours:'08:00 - 02:00', img:'sube-bafra-yeni', tel:'0507 171 78 26'},
+ {id:'susehri', city:'Sivas', dist:'Suşehri', addr:'Kemalpaşa Mah. Tokat Erzincan Cad. No:891', hours:'08:00 - 01:00', img:'sube-susehri', tel:'0507 171 78 26'},
+ {id:'erbil', city:'Irak', dist:'Erbil', addr:'Majidi Mall, Erbil Governorate', hours:'09:00 - 00:00', img:'sube-irak-yeni', tel:'0507 171 78 26'}
+];
+const PROMOS = [
+ {cls:'g', tag:'Hafta içi', title:'2. kahve %50', text:'09:00–11:00 arası ikinci sıcak kahvede yarı fiyat.', img:'assets/sicaklar_new/cappuccino.webp'},
+ {cls:'b', tag:'Qubo Club', title:'10 damga = 1 kahve', text:'Her içecek bir damga. Onuncusu bizden.', img:'assets/sicaklar_new/flat_white.webp'},
+ {cls:'k', tag:'Tatlı saati', title:'Pasta + kahve 199₺', text:'15:00 sonrası dilim pasta ve filtre kahve menüsü.', img:'assets/pastalar/lotus_dome.webp'},
+ {cls:'g', tag:'Evde Qubo', title:'Çekirdekte %15', text:'Uygulamadan sipariş edilen tüm 250g paketlerde.', img:'assets/kahve-cekirdekleri/special-blend-espresso.webp'}
+];
+const SIZES = [['S', 0], ['M', 15], ['L', 30]];
+const MILKS = [['Normal', 0], ['Laktozsuz', 10], ['Badem', 20], ['Yulaf', 20]];
+const SYRUPS = [['Yok', 0], ['Vanilya', 15], ['Karamel', 15], ['Fındık', 15]];
+const WEIGHTS = [['250 g', 0], ['500 g', 420], ['1 kg', 780]];
+
+/* ---------- STATE ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('qubo.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('qubo.' + k, JSON.stringify(v)); } catch (e) {} }
+};
+const SAMPLE_HISTORY = [
+  { code: 'Q-4712', when: 'Dün 09:12', store: 'kizilay', total: 255, items: 'Flat White (M), Lotus Dome', sample: true },
+  { code: 'Q-4690', when: '3 gün önce', store: 'kizilay', total: 140, items: 'Ice Americano (L)', sample: true }
+];
+let state = {
+  branch: store.get('branch', null),
+  cart: store.get('cart', []),
+  member: store.get('member', { name: '', points: 240, stamps: 6, rewards: 0 }),
+  history: store.get('history', SAMPLE_HISTORY),
+  activeOrder: null,
+  menuCat: 'sicak',
+  pickup: 'now', pay: 'kasa', usePoints: false, note: ''
+};
+const save = () => { store.set('branch', state.branch); store.set('cart', state.cart); store.set('member', state.member); store.set('history', state.history); };
+const TL = n => n.toLocaleString('tr-TR') + '₺';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const curStore = () => STORES.find(s => s.id === state.branch) || null;
+const cartCount = () => state.cart.reduce((a, l) => a + l.qty, 0);
+const lineTotal = l => l.unit * l.qty;
+const subtotal = () => state.cart.reduce((a, l) => a + lineTotal(l), 0);
+
+/* ---------- HELPERS ---------- */
+function isOpen(hours) {
+  const [o, c] = hours.split(' - ').map(t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; });
+  const d = new Date(); const n = d.getHours() * 60 + d.getMinutes();
+  return c > o ? (n >= o && n < c) : (n >= o || n < c);
+}
+function tier(points) { return points >= 1500 ? ['Altın', 1500, 1500] : points >= 600 ? ['Gümüş', 600, 1500] : ['Bronz', 0, 600]; }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1800); }
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m5 12 5 5 9-10"/></svg>';
+const ICON_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>';
+function pcard(p) {
+  return `<button class="pcard" onclick="openProduct('${p.id}')" aria-label="${esc(p.name)}">
+    <div class="img"><img src="${p.img}" alt="" loading="lazy"></div>
+    <div class="name">${esc(p.name)}</div>
+    <div class="bottom"><span class="price">${TL(p.price)}</span><span class="addbtn">${ICON_PLUS}</span></div></button>`;
+}
+function stampsHtml(n) { return Array.from({ length: 10 }, (_, i) => `<span class="stamp ${i < n ? 'on' : ''}">${i < n ? ICON_CHECK : ''}</span>`).join(''); }
+
+/* ---------- RENDER: HOME ---------- */
+function renderHome() {
+  const s = curStore();
+  document.getElementById('branchName').textContent = s ? `${s.city} / ${s.dist}` : 'Şube seç';
+  const m = state.member;
+  const [tn, tlo, thi] = tier(m.points);
+  const first = m.name ? m.name.split(' ')[0] : '';
+  const h = new Date().getHours();
+  const sel = h < 11 ? 'Günaydın' : h < 18 ? 'İyi günler' : 'İyi akşamlar';
+  document.getElementById('greet').innerHTML = `${sel}${first ? ', ' + esc(first) : ''}<small>${h < 11 ? 'Güne bir Qubo ile başla.' : h < 18 ? 'Öğleden sonra molası?' : 'Akşam için bir tatlı eşlik etsin.'}</small>`;
+  document.getElementById('loyaltyCard').innerHTML = `
+    <div class="top"><div><span class="eyebrow">Qubo Club</span><div class="pts">${m.points.toLocaleString('tr-TR')}<small>puan</small></div></div><span class="tier">${tn} üye</span></div>
+    <div class="stamps">${stampsHtml(m.stamps)}</div>
+    <div class="foot"><span>${m.stamps}/10 damga · ${m.rewards > 0 ? m.rewards + ' ücretsiz kahve hakkın var' : (10 - m.stamps) + ' damga sonra ücretsiz kahve'}</span><button class="btn-ghost" onclick="go('club')">QR kart</button></div>`;
+  document.getElementById('promoRow').innerHTML = PROMOS.map(p => `<article class="promo ${p.cls}"><span class="tag">${p.tag}</span><div><h3>${p.title}</h3><p>${p.text}</p></div><img src="${p.img}" alt=""></article>`).join('');
+  document.getElementById('homeCats').innerHTML = CATS.map(c => `<button class="cat" onclick="state.menuCat='${c.id}';go('menu')"><img src="assets/${c.dir}/${c.icon}.webp" alt="" loading="lazy">${c.name}</button>`).join('');
+  document.getElementById('popularRow').innerHTML = POPULAR.map(id => pcard(byId(id))).join('');
+  document.getElementById('homeStore').innerHTML = s ? storeCard(s, true) : `<div class="card"><p style="margin:0 0 10px;color:var(--muted);font-size:13px">Sipariş vermek için önce bir şube seç.</p><button class="btn primary sm" onclick="go('stores')">Şube seç</button></div>`;
+}
+
+/* ---------- RENDER: MENU ---------- */
+function renderMenu() {
+  const q = (document.getElementById('q').value || '').trim().toLocaleLowerCase('tr-TR');
+  document.getElementById('catChips').innerHTML = CATS.map(c => `<button class="${!q && c.id === state.menuCat ? 'on' : ''}" onclick="state.menuCat='${c.id}';document.getElementById('q').value='';renderMenu()">${c.name}</button>`).join('');
+  const list = q ? PRODUCTS.filter(p => p.name.toLocaleLowerCase('tr-TR').includes(q)) : PRODUCTS.filter(p => p.cat === state.menuCat);
+  document.getElementById('menuGrid').innerHTML = list.map(pcard).join('');
+  document.getElementById('menuEmpty').hidden = list.length > 0;
+}
+
+/* ---------- RENDER: PROMOS ---------- */
+function renderPromos() {
+  document.getElementById('promoList').innerHTML = PROMOS.map(p => `<article class="promo ${p.cls}" style="width:auto;min-height:130px"><span class="tag">${p.tag}</span><div><h3>${p.title}</h3><p>${p.text}</p></div><img src="${p.img}" alt=""></article>`).join('');
+}
+
+/* ---------- PRODUCT SHEET ---------- */
+let sel = null;
+function openProduct(id) {
+  const p = byId(id);
+  sel = { p, size: 1, milk: 0, syrup: 0, shot: false, weight: 0, qty: 1 };
+  renderSheet();
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
+function unitPrice() {
+  const { p } = sel; let u = p.price;
+  if (p.drink) { u += SIZES[sel.size][1] + MILKS[sel.milk][1] + SYRUPS[sel.syrup][1] + (sel.shot ? 20 : 0); }
+  if (p.beans) u += WEIGHTS[sel.weight][1];
+  return u;
+}
+function seg(key, opts, cur) {
+  return `<div class="seg">${opts.map(([n, d], i) => `<button class="${i === cur ? 'on' : ''}" onclick="sel.${key}=${i};renderSheet()">${n}${d ? ` <small style="opacity:.75">+${d}₺</small>` : ''}</button>`).join('')}</div>`;
+}
+function renderSheet() {
+  const { p } = sel;
+  let opts = '';
+  if (p.drink) opts = `
+    <div class="ogroup"><div class="lab">Boy</div>${seg('size', SIZES, sel.size)}</div>
+    <div class="ogroup"><div class="lab">Süt <small>bitkisel seçenekler</small></div>${seg('milk', MILKS, sel.milk)}</div>
+    <div class="ogroup"><div class="lab">Şurup</div>${seg('syrup', SYRUPS, sel.syrup)}</div>
+    <div class="ogroup"><div class="lab">Ekstra shot <small>+20₺</small></div><div class="seg"><button class="${sel.shot ? 'on' : ''}" onclick="sel.shot=!sel.shot;renderSheet()">${sel.shot ? 'Eklendi' : 'Ekle'}</button></div></div>`;
+  if (p.beans) opts = `<div class="ogroup"><div class="lab">Paket</div>${seg('weight', WEIGHTS, sel.weight)}</div><div class="ogroup"><div class="lab">Öğütme</div><div class="seg"><button class="on">Çekirdek</button><button>Espresso</button><button>Filtre</button><button>French press</button></div></div>`;
+  document.getElementById('sheet').innerHTML = `
+    <div class="handle"></div>
+    <div class="hero"><img src="${p.img}" alt="${esc(p.name)}"><button class="close" onclick="closeSheet()" aria-label="Kapat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <h2>${esc(p.name)}</h2><div class="sub">${p.catName} · ${TL(p.price)}${p.drink ? ' (S boy)' : ''}</div>
+    ${opts}
+    <div class="ogroup"><div class="lab">Adet</div><div class="stepper"><button onclick="sel.qty=Math.max(1,sel.qty-1);renderSheet()" aria-label="Azalt">−</button><output>${sel.qty}</output><button onclick="sel.qty++;renderSheet()" aria-label="Artır">+</button></div></div>
+    <div class="foot"><div><small style="color:var(--muted);font-size:11px">Toplam</small><div class="price" style="font-size:20px">${TL(unitPrice() * sel.qty)}</div></div><button class="btn primary" onclick="addToCart()">Sepete ekle</button></div>`;
+}
+function addToCart() {
+  const { p } = sel;
+  const detail = p.drink ? [SIZES[sel.size][0] + ' boy', MILKS[sel.milk][0] !== 'Normal' ? MILKS[sel.milk][0] + ' süt' : null, SYRUPS[sel.syrup][0] !== 'Yok' ? SYRUPS[sel.syrup][0] : null, sel.shot ? 'Ekstra shot' : null].filter(Boolean).join(' · ')
+    : p.beans ? WEIGHTS[sel.weight][0] : '';
+  const key = p.id + '|' + detail;
+  const ex = state.cart.find(l => l.key === key);
+  if (ex) ex.qty += sel.qty; else state.cart.push({ key, id: p.id, detail, unit: unitPrice(), qty: sel.qty });
+  save(); closeSheet(); toast(`${p.name} sepete eklendi`); updateBadge();
+}
+
+/* ---------- RENDER: CART ---------- */
+function updateBadge() { const b = document.getElementById('cartBadge'); const n = cartCount(); b.hidden = n === 0; b.textContent = n; }
+function changeQty(i, d) { state.cart[i].qty += d; if (state.cart[i].qty <= 0) state.cart.splice(i, 1); save(); renderCart(); updateBadge(); }
+function pickupSlots() {
+  const out = [['now', 'Hemen · ~10 dk']]; const d = new Date(); d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15 + 15, 0, 0);
+  for (let i = 0; i < 4; i++) { const t = d.toTimeString().slice(0, 5); out.push([t, t]); d.setMinutes(d.getMinutes() + 15); }
+  return out;
+}
+function renderCart() {
+  const s = curStore();
+  document.getElementById('cartSub').textContent = s ? `${s.city} / ${s.dist} şubesinden teslim` : 'Teslim şubesi seçilmedi';
+  const body = document.getElementById('cartBody');
+  if (!state.cart.length) {
+    body.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 8h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2.5 2.5 0 0 1 0 5h-2M8 3v2M11 3v2M14 3v2"/></svg><h3>Sepetin boş</h3><p>Menüden bir şeyler ekle, biz hazırlayalım.</p><button class="btn primary" style="margin-top:14px" onclick="go('menu')">Menüye git</button></div>`;
+    return;
+  }
+  const sub = subtotal();
+  const disc = state.usePoints && state.member.points >= 100 ? Math.min(Math.floor(state.member.points / 100) * 10, sub) : 0;
+  const slots = pickupSlots();
+  body.innerHTML = `<div class="stack">
+    ${state.cart.map((l, i) => { const p = byId(l.id); return `<div class="line"><div class="th"><img src="${p.img}" alt=""></div><div class="info"><b>${esc(p.name)}</b><small>${esc(l.detail) || p.catName}</small><span class="price" style="font-size:13px">${TL(lineTotal(l))}</span></div><div class="stepper"><button onclick="changeQty(${i},-1)" aria-label="Azalt">−</button><output>${l.qty}</output><button onclick="changeQty(${i},1)" aria-label="Artır">+</button></div></div>`; }).join('')}
+    <div class="card"><h3>Teslimat</h3>
+      <div class="opt-row"><b>Şube</b><span class="v">${s ? `${s.city} / ${s.dist}` : 'Seçilmedi'} · <a class="link" href="#stores" onclick="go('stores');return false">Değiştir</a></span></div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch"><b style="margin-bottom:8px">Teslim saati</b><div class="seg">${slots.map(([v, n]) => `<button class="${state.pickup === v ? 'on' : ''}" onclick="state.pickup='${v}';renderCart()">${n}</button>`).join('')}</div></div>
+      <div class="opt-row" style="flex-direction:column;align-items:stretch"><b style="margin-bottom:8px">Sipariş notu</b><input class="note" id="noteInput" placeholder="Örn. az şekerli, kapaksız" value="${esc(state.note)}" oninput="state.note=this.value"></div>
+    </div>
+    <div class="card"><h3>Ödeme</h3>
+      <div class="seg"><button class="${state.pay === 'kasa' ? 'on' : ''}" onclick="state.pay='kasa';renderCart()">Kasada öde</button><button class="${state.pay === 'kart' ? 'on' : ''}" onclick="state.pay='kart';renderCart()">Kayıtlı kart •••• 4242</button></div>
+      <div class="opt-row" style="margin-top:10px"><b>Puan kullan <small style="color:var(--muted);font-weight:400">(100 puan = 10₺)</small></b><button class="switch" role="switch" aria-checked="${state.usePoints}" aria-label="Puan kullan" ${state.member.points < 100 ? 'disabled' : ''} onclick="state.usePoints=!state.usePoints;renderCart()"></button></div>
+    </div>
+    <div class="card">
+      <div class="sum"><span>Ara toplam</span><span>${TL(sub)}</span></div>
+      ${disc ? `<div class="sum" style="color:var(--success)"><span>Qubo Club indirimi</span><span>−${TL(disc)}</span></div>` : ''}
+      <div class="sum"><span>Kazanılacak puan</span><span>+${Math.floor((sub - disc) / 10)}</span></div>
+      <div class="sum total"><span>Toplam</span><span>${TL(sub - disc)}</span></div>
+      <button class="btn primary block" style="margin-top:14px" ${s ? '' : 'disabled'} onclick="placeOrder(${sub - disc},${disc})">${s ? 'Siparişi onayla' : 'Önce şube seç'}</button>
+    </div></div>`;
+}
+
+/* ---------- ORDER ---------- */
+function placeOrder(total, disc) {
+  const s = curStore(); if (!s) return;
+  const code = 'Q-' + (4800 + Math.floor(Math.random() * 199));
+  const drinks = state.cart.filter(l => byId(l.id).drink).reduce((a, l) => a + l.qty, 0);
+  const m = state.member;
+  if (disc) m.points -= disc * 10;
+  m.points += Math.floor(total / 10);
+  m.stamps += drinks; while (m.stamps >= 10) { m.stamps -= 10; m.rewards++; }
+  const items = state.cart.map(l => { const p = byId(l.id); return `${p.name}${l.detail ? ' (' + l.detail.split(' · ')[0] + ')' : ''}${l.qty > 1 ? ' ×' + l.qty : ''}`; }).join(', ');
+  const order = { code, when: 'Şimdi', store: s.id, total, items, lines: state.cart.slice(), pickup: state.pickup, note: state.note, status: 0, earned: Math.floor(total / 10), drinks };
+  state.history.unshift({ code, when: new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }), store: s.id, total, items });
+  state.cart = []; state.usePoints = false; state.note = ''; state.activeOrder = order; save(); updateBadge();
+  go('order');
+  clearTimeout(placeOrder.t1); clearTimeout(placeOrder.t2);
+  placeOrder.t1 = setTimeout(() => { order.status = 1; renderOrder(); }, 3000);
+  placeOrder.t2 = setTimeout(() => { order.status = 2; renderOrder(); toast('Siparişin hazır, afiyet olsun!'); }, 8000);
+}
+function renderOrder() {
+  const o = state.activeOrder; const body = document.getElementById('orderBody');
+  if (!o) { body.innerHTML = `<div class="ph-head"><h1>Sipariş</h1></div><div class="empty"><h3>Aktif sipariş yok</h3><p>Yeni bir sipariş için menüye git.</p><button class="btn primary" style="margin-top:14px" onclick="go('menu')">Menüye git</button></div>`; return; }
+  const s = STORES.find(x => x.id === o.store);
+  const steps = [['Sipariş alındı', 'Şube siparişini gördü'], ['Hazırlanıyor', 'Baristamız kahveni yapıyor'], ['Hazır', 'Tezgahtan teslim alabilirsin']];
+  body.innerHTML = `<div class="ph-head"><span class="eyebrow">Gel-al sipariş</span><h1>${o.status === 2 ? 'Hazır!' : o.status === 1 ? 'Hazırlanıyor' : 'Sipariş alındı'}</h1><p>${s.city} / ${s.dist} · ${o.pickup === 'now' ? 'Hemen' : o.pickup + "'de"} teslim</p></div>
+    <div class="card" style="text-align:center"><span class="eyebrow">Sipariş kodu</span><div class="ocode">${o.code}</div><small style="color:var(--muted)">Kasada bu kodu söyle</small></div>
+    <div class="card" style="margin-top:12px"><div class="steps">${steps.map(([b, t], i) => `<div class="step ${i < o.status ? 'done' : i === o.status ? 'now' : ''} ${i === o.status && o.status === 2 ? 'done' : ''}"><span class="dot">${ICON_CHECK}</span><div><b>${b}</b><small>${t}</small></div></div>`).join('')}</div></div>
+    <div class="card" style="margin-top:12px"><h3>Sipariş özeti</h3>${o.lines.map(l => { const p = byId(l.id); return `<div class="sum"><span>${l.qty}× ${esc(p.name)}<br><small style="color:var(--muted)">${esc(l.detail)}</small></span><span>${TL(lineTotal(l))}</span></div>`; }).join('')}${o.note ? `<div class="sum"><span style="color:var(--muted)">Not: ${esc(o.note)}</span></div>` : ''}<div class="sum total"><span>Toplam</span><span>${TL(o.total)}</span></div></div>
+    <div class="card" style="margin-top:12px;background:var(--green-light);border-color:transparent"><b style="font-size:13px">+${o.earned} puan ve ${o.drinks} damga kazandın</b><br><small style="color:var(--muted)">Qubo Club bakiyen: ${state.member.points} puan · ${state.member.stamps}/10 damga</small></div>
+    <div class="actions"><button class="btn primary" onclick="state.activeOrder=null;go('menu')">Yeni sipariş</button><button class="btn outline" onclick="go('club')">Qubo Club</button></div>`;
+}
+
+/* ---------- RENDER: STORES ---------- */
+function storeCard(s, compact) {
+  const open = isOpen(s.hours); const seld = state.branch === s.id;
+  const maps = 'https://maps.google.com/?q=' + encodeURIComponent('Qubo Coffee ' + s.addr + ' ' + s.city);
+  return `<article class="store ${seld ? 'sel' : ''}"><div class="ph"><img src="assets/${s.img}.webp" alt="${s.city} ${s.dist} şubesi" loading="lazy"></div><div class="body">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><h3>${s.city} / ${s.dist}</h3><span class="pill ${open ? 'open' : 'closed'}"><span class="dot"></span>${open ? 'Açık' : 'Kapalı'}</span></div>
+    <p>${s.addr}</p><p style="font-variant-numeric:tabular-nums"><b style="color:var(--fg);font-weight:500">${s.hours}</b> · ${s.tel}</p>
+    <div class="actions">${compact ? '' : `<button class="btn ${seld ? 'outline' : 'primary'} sm" onclick="selectStore('${s.id}')">${seld ? 'Seçili şube' : 'Bu şubeyi seç'}</button>`}<a class="btn outline sm" href="${maps}" target="_blank" rel="noopener">Yol tarifi</a>${compact ? `<button class="btn gold sm" onclick="go('menu')">Sipariş ver</button>` : ''}</div></div></article>`;
+}
+function selectStore(id) { state.branch = id; save(); renderStores(); toast('Şube seçildi: ' + curStore().dist); }
+function renderStores() {
+  const q = (document.getElementById('sq').value || '').trim().toLocaleLowerCase('tr-TR');
+  const list = STORES.filter(s => !q || (s.city + ' ' + s.dist + ' ' + s.addr).toLocaleLowerCase('tr-TR').includes(q));
+  document.getElementById('storeList').innerHTML = list.length ? list.map(s => storeCard(s, false)).join('') : `<div class="empty"><h3>Şube bulunamadı</h3><p>Başka bir şehir dene.</p></div>`;
+}
+
+/* ---------- RENDER: CLUB ---------- */
+function drawQR(seedStr) {
+  const c = document.getElementById('qr'); const ctx = c.getContext('2d'); const N = 25, cell = c.width / N;
+  let seed = hash(seedStr) || 7; const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.fillStyle = '#0e2b22';
+  const finder = (x, y) => { for (let i = 0; i < 7; i++) for (let j = 0; j < 7; j++) { const edge = i === 0 || j === 0 || i === 6 || j === 6, core = i >= 2 && i <= 4 && j >= 2 && j <= 4; if (edge || core) ctx.fillRect((x + j) * cell, (y + i) * cell, cell, cell); } };
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { const inF = (i < 8 && j < 8) || (i < 8 && j >= N - 8) || (i >= N - 8 && j < 8); if (!inF && rnd() > .55) ctx.fillRect(j * cell, i * cell, cell, cell); }
+  finder(0, 0); finder(N - 7, 0); finder(0, N - 7);
+}
+function renderClub() {
+  const m = state.member; const [tn, tlo, thi] = tier(m.points);
+  document.getElementById('clubName').textContent = m.name || 'Misafir';
+  document.getElementById('tierChip').textContent = tn + ' üye';
+  document.getElementById('clubPts').textContent = m.points.toLocaleString('tr-TR') + ' puan';
+  document.getElementById('clubNext').textContent = m.rewards ? `${m.rewards} ücretsiz kahve hakkın var` : 'Kasada okut, her 10₺ için 1 puan kazan';
+  const pct = tn === 'Altın' ? 100 : Math.round((m.points - tlo) / (thi - tlo) * 100);
+  document.getElementById('tierBar').style.width = pct + '%';
+  document.getElementById('tierText').textContent = tn === 'Altın' ? 'En üst seviye' : `${tn === 'Bronz' ? 'Gümüş' : 'Altın'} seviyeye ${(thi - m.points).toLocaleString('tr-TR')} puan`;
+  document.getElementById('clubStamps').innerHTML = stampsHtml(m.stamps);
+  document.getElementById('stampText').textContent = `${m.stamps}/10`;
+  document.getElementById('nameInput').value = m.name;
+  document.getElementById('history').innerHTML = state.history.length ? state.history.map(h => { const s = STORES.find(x => x.id === h.store); return `<button onclick="reorder('${h.code}')"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h2a2.5 2.5 0 0 1 0 5h-2"/></svg></span><span class="tx"><b>${esc(h.items)}</b><small>${h.code} · ${s ? s.dist : ''} · ${h.when}${h.sample ? ' · örnek' : ''}</small></span><span class="r">${TL(h.total)}</span></button>`; }).join('') : `<div><span class="tx"><small>Henüz sipariş yok.</small></span></div>`;
+  drawQR('qubo-member-' + (m.name || 'guest'));
+}
+function reorder(code) {
+  const h = state.history.find(x => x.code === code); if (!h) return;
+  const names = h.items.split(', ').map(s => s.replace(/\s*\(.*?\)|\s*×\d+/g, '').trim());
+  let added = 0;
+  names.forEach(n => { const p = PRODUCTS.find(x => x.name === n); if (!p) return; const detail = p.drink ? 'M boy' : p.beans ? '250 g' : ''; const unit = p.price + (p.drink ? 15 : 0); const key = p.id + '|' + detail; const ex = state.cart.find(l => l.key === key); if (ex) ex.qty++; else state.cart.push({ key, id: p.id, detail, unit, qty: 1 }); added++; });
+  if (h.store) { state.branch = h.store; }
+  save(); updateBadge(); toast(added ? `${added} ürün sepete eklendi` : 'Ürünler bulunamadı'); if (added) go('cart');
+}
+
+/* ---------- ROUTER ---------- */
+const SCREENS = ['home', 'menu', 'cart', 'stores', 'club', 'order', 'promos'];
+const RENDER = { home: renderHome, menu: renderMenu, cart: renderCart, stores: renderStores, club: renderClub, order: renderOrder, promos: renderPromos };
+function go(name) {
+  if (!SCREENS.includes(name)) name = 'home';
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 's-' + name));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.tab === name || (name === 'order' && t.dataset.tab === 'cart') || (name === 'promos' && t.dataset.tab === 'home')));
+  RENDER[name]();
+  if (location.hash !== '#' + name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} }
+  window.scrollTo({ top: 0 });
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => { e.preventDefault(); go(t.dataset.tab); }));
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+document.getElementById('q').addEventListener('input', renderMenu);
+document.getElementById('sq').addEventListener('input', renderStores);
+document.getElementById('nameInput').addEventListener('input', e => { state.member.name = e.target.value; save(); document.getElementById('clubName').textContent = state.member.name || 'Misafir'; drawQR('qubo-member-' + (state.member.name || 'guest')); });
+document.querySelectorAll('#swPromo,#swOrder').forEach(sw => sw.addEventListener('click', () => sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') !== 'true')));
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+updateBadge();
+go(location.hash.slice(1) || 'home');
+</script>
